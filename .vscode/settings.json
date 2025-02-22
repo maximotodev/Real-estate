@@ -1,0 +1,8 @@
+{
+  "files.exclude": {
+    "**/.git": false,
+    "**/.gitignore": false,
+    "**/.gitmodules": false
+  },
+  "editor.formatOnSave": true
+}

@@ -1,185 +1,140 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
-import axios from 'axios';
+import { useState, useEffect, useCallback } from 'react';
 
 export const useApi = (url, options = {}) => {
   const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const isMounted = useRef(true);
+
+  const fetch = useCallback(async () => {
+    try {
+      setLoading(true);
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      const headers = {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
+        ...options.headers,
+      };
+
+      const response = await window.fetch(url, {
+        method: options.method || 'GET',
+        headers,
+        body: options.body ? JSON.stringify(options.body) : undefined,
+      });
+
+      if (!response.ok) throw new Error(`API Error: ${response.status}`);
+      const result = await response.json();
+      setData(result);
+      setError(null);
+    } catch (err) {
+      setError(err.message);
+      setData(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [url, options]);
 
   useEffect(() => {
-    return () => {
-      isMounted.current = false;
-    };
-  }, []);
+    if (options.skip) return;
+    fetch();
+  }, [fetch, options.skip]);
 
-  const execute = useCallback(
-    async (customUrl = url, customOptions = {}) => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-        const headers = {
-          ...customOptions.headers,
-          ...(token && { Authorization: `Bearer ${token}` }),
-        };
-
-        const response = await axios({
-          url: customUrl,
-          method: customOptions.method || options.method || 'GET',
-          headers,
-          data: customOptions.data || options.data,
-          params: customOptions.params || options.params,
-          ...customOptions,
-        });
-
-        if (isMounted.current) {
-          setData(response.data);
-        }
-
-        return response.data;
-      } catch (err) {
-        if (isMounted.current) {
-          setError(err.response?.data?.error || err.message);
-        }
-        throw err;
-      } finally {
-        if (isMounted.current) {
-          setLoading(false);
-        }
-      }
-    },
-    [url, options]
-  );
-
-  const refetch = useCallback(() => execute(url), [execute, url]);
-
-  return { data, loading, error, execute, refetch };
+  return { data, loading, error, refetch: fetch };
 };
 
 export const useGet = (url, options = {}) => {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  return useApi(url, { ...options, method: 'GET' });
+};
+
+export const usePost = (url, options = {}) => {
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const isMounted = useRef(true);
 
-  useEffect(() => {
-    return () => {
-      isMounted.current = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    const fetchData = async () => {
+  const mutate = useCallback(
+    async (body) => {
       try {
-        const token = localStorage.getItem('token');
-        const response = await axios.get(url, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-          ...options,
+        setLoading(true);
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        const response = await window.fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+          body: JSON.stringify(body),
         });
 
-        if (isMounted.current) {
-          setData(response.data);
-          setError(null);
-        }
+        if (!response.ok) throw new Error(`API Error: ${response.status}`);
+        return await response.json();
       } catch (err) {
-        if (isMounted.current) {
-          setError(err.response?.data?.error || err.message);
-        }
+        setError(err.message);
+        throw err;
       } finally {
-        if (isMounted.current) {
-          setLoading(false);
-        }
+        setLoading(false);
       }
-    };
+    },
+    [url]
+  );
 
-    fetchData();
-  }, [url, options]);
-
-  return { data, loading, error };
+  return { mutate, loading, error };
 };
 
-export const usePost = () => {
+export const usePut = (url) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const execute = useCallback(async (url, data = {}, options = {}) => {
-    setLoading(true);
-    setError(null);
+  const mutate = useCallback(
+    async (body) => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem('token');
+        const response = await fetch(url, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+          body: JSON.stringify(body),
+        });
 
+        if (!response.ok) throw new Error(`API Error: ${response.status}`);
+        return await response.json();
+      } catch (err) {
+        setError(err.message);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [url]
+  );
+
+  return { mutate, loading, error };
+};
+
+export const useDelete = (url) => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const mutate = useCallback(async () => {
     try {
+      setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await axios.post(url, data, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-        ...options,
+      const response = await fetch(url, {
+        method: 'DELETE',
+        headers: {
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
       });
 
-      return response.data;
+      if (!response.ok) throw new Error(`API Error: ${response.status}`);
+      return await response.json();
     } catch (err) {
-      const errorMessage = err.response?.data?.error || err.message;
-      setError(errorMessage);
+      setError(err.message);
       throw err;
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [url]);
 
-  return { execute, loading, error };
-};
-
-export const usePut = () => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  const execute = useCallback(async (url, data = {}, options = {}) => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.put(url, data, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-        ...options,
-      });
-
-      return response.data;
-    } catch (err) {
-      const errorMessage = err.response?.data?.error || err.message;
-      setError(errorMessage);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  return { execute, loading, error };
-};
-
-export const useDelete = () => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  const execute = useCallback(async (url, options = {}) => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.delete(url, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-        ...options,
-      });
-
-      return response.data;
-    } catch (err) {
-      const errorMessage = err.response?.data?.error || err.message;
-      setError(errorMessage);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  return { execute, loading, error };
+  return { mutate, loading, error };
 };

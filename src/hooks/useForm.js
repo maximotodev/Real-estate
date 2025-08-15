@@ -1,140 +1,132 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 
 export const useForm = (initialState, onSubmit, options = {}) => {
   const [values, setValues] = useState(initialState);
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isValidating, setIsValidating] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const submitCountRef = useRef(0);
+  const initialStateRef = useRef(initialState);
+
+  // Keep initialState ref current without re-triggering effects
+  useEffect(() => {
+    initialStateRef.current = initialState;
+  });
 
   const handleChange = useCallback((e) => {
     const { name, value, type, checked } = e.target;
+    const newValue = type === 'checkbox' ? checked : value;
 
-    setValues((prev) => {
-      const newValues = {
-        ...prev,
-        [name]: type === 'checkbox' ? checked : value,
-      };
-      return newValues;
-    });
+    setValues((prev) => ({ ...prev, [name]: newValue }));
+    setIsSuccess(false);
 
-    // Clear error for this field if it was touched
-    if (touched[name]) {
+    if (touched[name] && errors[name]) {
       setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[name];
-        return newErrors;
+        const next = { ...prev };
+        delete next[name];
+        return next;
       });
     }
-  }, [touched]);
+  }, [touched, errors]);
 
   const handleBlur = useCallback((e) => {
     const { name } = e.target;
-    setTouched((prev) => ({
-      ...prev,
-      [name]: true,
-    }));
+    setTouched((prev) => ({ ...prev, [name]: true }));
 
-    // Optional: validate field on blur
     if (options.validateOnBlur && options.validate) {
       const fieldErrors = options.validate({ [name]: values[name] });
       if (fieldErrors[name]) {
         setErrors((prev) => ({ ...prev, [name]: fieldErrors[name] }));
       }
     }
-  }, [values, touched, options]);
+  }, [values, options]);
 
-  const handleSubmit = useCallback(
-    async (e) => {
-      e?.preventDefault?.();
+  const handleSubmit = useCallback(async (e) => {
+    e?.preventDefault?.();
 
-      // Mark all fields as touched
-      setTouched(
-        Object.keys(values).reduce((acc, key) => {
-          acc[key] = true;
-          return acc;
-        }, {})
-      );
+    // Touch all fields so errors are visible
+    const allTouched = Object.keys(values).reduce((acc, key) => {
+      acc[key] = true;
+      return acc;
+    }, {});
+    setTouched(allTouched);
 
-      submitCountRef.current += 1;
-      setIsSubmitting(true);
-
-      try {
-        // Run validation if provided
-        if (options.validate) {
-          setIsValidating(true);
-          const validationErrors = options.validate(values);
-          if (Object.keys(validationErrors).length > 0) {
-            setErrors(validationErrors);
-            setIsValidating(false);
-            setIsSubmitting(false);
-            return;
-          }
-          setIsValidating(false);
-        }
-
-        // Call the submit handler
-        await onSubmit(values, {
-          resetForm: reset,
-          setFieldError,
-          setFieldValue,
-          setErrors,
-        });
-      } catch (err) {
-        console.error('Form submission error:', err);
-        if (err.errors && typeof err.errors === 'object') {
-          setErrors(err.errors);
-        } else if (err.message) {
-          setErrors({ submit: err.message });
-        }
-      } finally {
-        setIsSubmitting(false);
+    if (options.validate) {
+      const validationErrors = options.validate(values);
+      if (Object.keys(validationErrors).length > 0) {
+        setErrors(validationErrors);
+        return;
       }
-    },
-    [values, onSubmit, options]
-  );
+    }
+
+    submitCountRef.current += 1;
+    setIsSubmitting(true);
+    setErrors({});
+
+    try {
+      await onSubmit(values, { reset, setFieldError, setFieldValue, setErrors });
+      setIsSuccess(true);
+    } catch (err) {
+      if (err?.errors && typeof err.errors === 'object') {
+        setErrors(err.errors);
+      } else if (err?.message) {
+        setErrors({ submit: err.message });
+      } else {
+        setErrors({ submit: 'Something went wrong. Please try again.' });
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [values, onSubmit, options]);
 
   const reset = useCallback(() => {
-    setValues(initialState);
+    setValues(initialStateRef.current);
     setErrors({});
     setTouched({});
+    setIsSuccess(false);
     submitCountRef.current = 0;
-  }, [initialState]);
+  }, []);
 
   const setFieldValue = useCallback((name, value) => {
-    setValues((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setValues((prev) => ({ ...prev, [name]: value }));
   }, []);
 
   const setFieldError = useCallback((name, error) => {
-    setErrors((prev) => ({
-      ...prev,
-      [name]: error,
-    }));
+    setErrors((prev) => ({ ...prev, [name]: error }));
   }, []);
 
-  const getFieldProps = useCallback(
-    (name) => ({
-      name,
-      value: values[name] || '',
-      onChange: handleChange,
-      onBlur: handleBlur,
-      'aria-invalid': Boolean(errors[name]),
-      'aria-describedby': errors[name] ? `${name}-error` : undefined,
-    }),
-    [values, errors, handleChange, handleBlur]
-  );
+  const clearFieldError = useCallback((name) => {
+    setErrors((prev) => {
+      const next = { ...prev };
+      delete next[name];
+      return next;
+    });
+  }, []);
+
+  const getFieldProps = useCallback((name) => ({
+    name,
+    value: values[name] ?? '',
+    onChange: handleChange,
+    onBlur: handleBlur,
+    'aria-invalid': Boolean(errors[name] && touched[name]),
+    'aria-describedby': errors[name] ? `${name}-error` : undefined,
+  }), [values, errors, touched, handleChange, handleBlur]);
+
+  const getCheckboxProps = useCallback((name) => ({
+    name,
+    checked: Boolean(values[name]),
+    onChange: handleChange,
+    onBlur: handleBlur,
+  }), [values, handleChange, handleBlur]);
 
   return {
     values,
     errors,
     touched,
     isSubmitting,
-    isValidating,
-    isDirty: JSON.stringify(values) !== JSON.stringify(initialState),
+    isSuccess,
+    isDirty: JSON.stringify(values) !== JSON.stringify(initialStateRef.current),
     submitCount: submitCountRef.current,
     handleChange,
     handleBlur,
@@ -142,6 +134,8 @@ export const useForm = (initialState, onSubmit, options = {}) => {
     reset,
     setFieldValue,
     setFieldError,
+    clearFieldError,
     getFieldProps,
+    getCheckboxProps,
   };
 };

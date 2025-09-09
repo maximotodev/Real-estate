@@ -1,92 +1,119 @@
-import Image from 'next/image';
 import React from 'react';
-import apartmentIcon from '../assets/icons/apartment.png';
-import officeIcon from '../assets/icons/office.png';
-import houseIcon from '../assets/icons/house.png';
-import warehouseIcon from '../assets/icons/warehouse.png';
-import parkingIcon from '../assets/icons/parking.png';
 import Link from 'next/link';
+
+const SERVICE_ITEMS = [
+  {
+    icon: '🏠',
+    title: 'Houses',
+    description: 'Single-family homes, townhouses, and detached properties in premium neighborhoods.',
+    count: '2,400+ listings',
+    href: '/search?type=house',
+    color: 'bg-blue-50 text-blue-600',
+  },
+  {
+    icon: '🏢',
+    title: 'Apartments',
+    description: 'Studio to 5-bedroom apartments across city centers and suburbs.',
+    count: '4,800+ listings',
+    href: '/search?type=apartment',
+    color: 'bg-purple-50 text-purple-600',
+  },
+  {
+    icon: '🏖️',
+    title: 'Villas',
+    description: 'Luxury villas with private pools, ocean views, and concierge services.',
+    count: '680+ listings',
+    href: '/search?type=villa',
+    color: 'bg-orange-50 text-orange-600',
+  },
+  {
+    icon: '🏬',
+    title: 'Offices',
+    description: 'Co-working spaces, private offices, and commercial units for businesses.',
+    count: '1,100+ listings',
+    href: '/search?type=office',
+    color: 'bg-green-50 text-green-600',
+  },
+  {
+    icon: '🏗️',
+    title: 'Warehouses',
+    description: 'Industrial storage units, logistics hubs, and commercial warehouses.',
+    count: '320+ listings',
+    href: '/search?type=warehouse',
+    color: 'bg-red-50 text-red-600',
+  },
+  {
+    icon: '🅿️',
+    title: 'Parking',
+    description: 'Secure monthly parking spots in garages and open-air lots near key areas.',
+    count: '900+ listings',
+    href: '/search?type=parking',
+    color: 'bg-yellow-50 text-yellow-600',
+  },
+];
 
 const Services = () => {
   return (
-    <div id="services" className="relative p-4 mb-4">
-      <div className="flex justify-center items-center">
-        <button className="relative mt-24 bg-blue-200 hover:bg-blue-600 px-4 py-1 rounded-2xl text-blue-500 hover:text-white h-8 w-28 font-black text-xs uppercase cursor-pointer ">
-          services
-        </button>
-      </div>
-      <div className="relative ">
-        <div className="flex flex-col justify-center items-center mt-20">
-          <p className=" text-8xl sm:text-10xl text-blue-700 opacity-5 font-black text-center z-0 absolute top-0 left-0 w-full uppercase  dark:text-white">
-            services
-          </p>
-          <p className="text-4xl text-blue-900 font-bold text-center z-20 relative mt-7 sm:mt-14 dark:text-gray-300">
+    <section id="services" className="py-24 px-4 dark:bg-gray-900">
+      <div className="max-w-6xl mx-auto">
+
+        {/* Header */}
+        <div className="text-center mb-14">
+          <span className="inline-block bg-blue-100 text-blue-600 text-xs font-bold uppercase tracking-widest px-4 py-1 rounded-full mb-4">
+            Services
+          </span>
+          <h2 className="text-4xl font-bold text-blue-900 dark:text-white">
             Services for Maximum Efficiency
+          </h2>
+          <p className="mt-3 text-gray-500 dark:text-gray-400 max-w-xl mx-auto text-sm">
+            From studio apartments to full warehouses — we have every property type covered. Find exactly what your lifestyle or business needs.
           </p>
         </div>
-      </div>
 
-      <div className="relative justify-center items-center">
-        <p className="font-medium text-base text-center mt-20  text-bluePText">
-          We have developed a unique space where you can work and create. We
-          thought of everything to the smallest
-          <br /> detail. You will be able to conduct your business, conduct
-          meetings, meetings
-        </p>
-      </div>
-
-      {/* 5 icons and names of services */}
-      <div className="grid grid-cols-2 sm:flex justify-center items-center mt-16 ml-[40px]">
-        <div className="flex flex-col justify-center items-center mr-[30px] sm:mr-[60px] sm:ml-[50px] hover:scale-125 ease-in duration-200">
-          <div className="bg-white h-[120px] w-[120px] mr-[30px] flex flex-col justify-center items-center rounded-[120px] shadow-xl p-[10px] gap-[10px] mb-5 dark:bg-gray-700">
-            <Image src={houseIcon} alt="house" className="w-11 h-10" />
-            <p className="font-bold text-sm leading-6  text-center text-blueCardTitle dark:text-gray-200 ">
-              House
-            </p>
-          </div>
+        {/* Service Cards Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+          {SERVICE_ITEMS.map((item) => (
+            <Link
+              key={item.title}
+              href={item.href}
+              className="group bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6 hover:shadow-xl transition-all hover:-translate-y-1 flex flex-col gap-3"
+            >
+              <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-2xl ${item.color} group-hover:scale-110 transition-transform`}>
+                {item.icon}
+              </div>
+              <h3 className="font-bold text-gray-900 dark:text-white text-lg">{item.title}</h3>
+              <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">{item.description}</p>
+              <div className="mt-auto flex justify-between items-center pt-3 border-t border-gray-100 dark:border-gray-700">
+                <span className="text-xs text-gray-400">{item.count}</span>
+                <span className="text-xs font-semibold text-blue-600 group-hover:underline">Browse →</span>
+              </div>
+            </Link>
+          ))}
         </div>
 
-        <div className="flex flex-col mr-[60px] hover:scale-125  ease-in duration-200">
-          <div className="bg-white h-[120px] w-[120px] mr-[30px] flex flex-col justify-center items-center rounded-[120px] shadow-xl p-[10px] gap-[10px] mb-5 dark:bg-gray-700">
-            <Image
-              src={apartmentIcon}
-              alt="apartment"
-              className="w-[45px] h-[45px]"
-            />
-            <p className="font-bold text-sm leading-6  text-center text-blueCardTitle dark:text-gray-200 ">
-              Apartment
-            </p>
-          </div>
-        </div>
-
-        <div className="flex flex-col  mr-[60px] hover:scale-125  ease-in duration-200">
-          <div className="bg-white h-[120px] w-[120px] sm:w-[166px] mr-[30px] flex flex-col justify-center items-center rounded-[120px] shadow-xl p-[10px] gap-[10px] mb-5 dark:bg-gray-700">
-            <Image src={officeIcon} alt="office" className="w-10 h-10" />
-            <p className="font-bold text-sm leading-6  text-center text-blueCardTitle dark:text-gray-200 ">
-              Office
-            </p>
-          </div>
-        </div>
-
-        <div className="flex flex-col  mr-[60px] hover:scale-125  ease-in duration-200">
-          <div className="bg-white h-[120px] w-[120px] mr-[30px] flex flex-col justify-center items-center rounded-[120px] shadow-xl p-[10px] gap-[10px] mb-5 dark:bg-gray-700">
-            <Image src={warehouseIcon} alt="warehouse" className="w-10 h-10" />
-            <p className="font-bold text-sm leading-6  text-center text-blueCardTitle dark:text-gray-200 ">
-              Warehouse
-            </p>
-          </div>
-        </div>
-
-        <div className="flex flex-col  mr-[60px] hover:scale-125  ease-in duration-200">
-          <div className="bg-white h-[120px] w-[120px] mr-[30px] flex flex-col justify-center items-center rounded-[120px] shadow-xl p-[10px] gap-[10px] mb-5 dark:bg-gray-700">
-            <Image src={parkingIcon} alt="parking" className="w-[26px] h-11" />
-            <p className="font-bold text-sm leading-6  text-center text-blueCardTitle dark:text-gray-200 ">
-              Parking
-            </p>
+        {/* How It Works */}
+        <div className="mt-20">
+          <h3 className="text-2xl font-bold text-center text-blue-900 dark:text-white mb-10">
+            How It Works
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+            {[
+              { step: '01', title: 'Search & Filter', desc: 'Use our advanced search to find properties matching your budget, location, and requirements.' },
+              { step: '02', title: 'Book a Viewing', desc: 'Schedule a visit or request a virtual tour directly through the platform.' },
+              { step: '03', title: 'Move In', desc: 'Complete the booking online, sign the agreement, and get the keys — all in one place.' },
+            ].map((item) => (
+              <div key={item.step} className="text-center">
+                <div className="w-14 h-14 rounded-full bg-blue-600 text-white font-black text-lg flex items-center justify-center mx-auto mb-4">
+                  {item.step}
+                </div>
+                <h4 className="font-bold text-gray-900 dark:text-white mb-2">{item.title}</h4>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">{item.desc}</p>
+              </div>
+            ))}
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 

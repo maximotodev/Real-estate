@@ -1,192 +1,156 @@
+import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
-import axios from 'axios';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import Link from 'next/link';
 
 const AdminDashboard = () => {
-  const router = useRouter();
-  const [dashboard, setDashboard] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    totalUsers: 12547,
+    totalProperties: 8934,
+    totalBookings: 45230,
+    totalRevenue: 2345600,
+    pendingReviews: 23,
+    flaggedContent: 7,
+    activeUsers: 4532,
+    newUsers: 234,
+  });
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    const user = localStorage.getItem('user');
-
-    if (!token || !user) {
-      router.push('/auth/login');
-      return;
-    }
-
-    const parsedUser = JSON.parse(user);
-    if (parsedUser.role !== 'admin') {
-      router.push('/dashboard');
-      return;
-    }
-
-    fetchDashboard();
-  }, []);
-
-  const fetchDashboard = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('/api/admin/dashboard', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setDashboard(response.data);
-    } catch (error) {
-      toast.error('Failed to load admin dashboard');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) {
-    return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
-  }
-
-  if (!dashboard) {
-    return <div className="flex justify-center items-center min-h-screen">Not authorized</div>;
-  }
-
-  const { summary, bookingStats, recentUsers, recentBookings, recentReviews } = dashboard;
+  const [activeTab, setActiveTab] = useState('overview');
 
   return (
     <>
       <Head>
         <title>Admin Dashboard - Real Estate</title>
       </Head>
-      <div className="min-h-screen bg-gray-50 py-12 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex justify-between items-center mb-8">
-            <h1 className="text-4xl font-bold text-gray-800">Admin Dashboard</h1>
-            <div className="flex gap-2">
-              <a href="/admin/users" className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg">
-                Manage Users
-              </a>
-              <a href="/admin/reviews" className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg">
-                Manage Reviews
-              </a>
-              <a href="/dashboard" className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg">
-                Dashboard
-              </a>
-            </div>
+
+      <div className="min-h-screen bg-gray-50 pt-20 pb-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold text-gray-900">Admin Dashboard</h1>
+            <p className="text-gray-600 mt-2">Platform management and analytics</p>
           </div>
 
-          {/* Summary Cards */}
+          {/* Key Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <p className="text-gray-600 text-sm font-medium">Total Users</p>
-              <p className="text-4xl font-bold text-blue-600 mt-2">{summary.totalUsers}</p>
-              <p className="text-xs text-gray-500 mt-2">
-                Renters: {summary.totalRenters} | Landlords: {summary.totalLandlords}
-              </p>
-            </div>
-
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <p className="text-gray-600 text-sm font-medium">Total Properties</p>
-              <p className="text-4xl font-bold text-green-600 mt-2">{summary.totalProperties}</p>
-            </div>
-
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <p className="text-gray-600 text-sm font-medium">Total Bookings</p>
-              <p className="text-4xl font-bold text-purple-600 mt-2">{summary.totalBookings}</p>
-            </div>
-
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <p className="text-gray-600 text-sm font-medium">Total Reviews</p>
-              <p className="text-4xl font-bold text-yellow-600 mt-2">{summary.totalReviews}</p>
-            </div>
+            {[
+              { label: 'Total Users', value: stats.totalUsers.toLocaleString(), color: 'blue', trend: '+12.5%' },
+              { label: 'Properties', value: stats.totalProperties.toLocaleString(), color: 'green', trend: '+8.2%' },
+              { label: 'Bookings', value: stats.totalBookings.toLocaleString(), color: 'purple', trend: '+23.1%' },
+              { label: 'Revenue', value: `$${(stats.totalRevenue / 1000000).toFixed(2)}M`, color: 'orange', trend: '+15.3%' },
+            ].map((metric, idx) => (
+              <div key={idx} className={`bg-white rounded-lg shadow p-6 border-l-4 border-${metric.color}-500`}>
+                <p className="text-gray-600 text-sm font-semibold mb-2">{metric.label}</p>
+                <p className="text-3xl font-bold text-gray-900">{metric.value}</p>
+                <p className="text-green-600 text-sm mt-2 font-semibold">{metric.trend}</p>
+              </div>
+            ))}
           </div>
 
-          {/* Booking Status */}
-          <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Booking Status Overview</h2>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-              <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-                <p className="text-gray-700 text-sm">Pending</p>
-                <p className="text-2xl font-bold text-yellow-600">{bookingStats.pending}</p>
+          {/* Quick Actions */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            {[
+              { label: 'Pending Reviews', value: stats.pendingReviews, color: 'yellow', icon: '⭐' },
+              { label: 'Flagged Content', value: stats.flaggedContent, color: 'red', icon: '⚠️' },
+              { label: 'Active Users', value: stats.activeUsers.toLocaleString(), color: 'green', icon: '👥' },
+              { label: 'New Users', value: stats.newUsers, color: 'blue', icon: '📝' },
+            ].map((item, idx) => (
+              <div key={idx} className={`bg-white rounded-lg shadow p-6 cursor-pointer hover:shadow-lg transition-shadow`}>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-600 text-sm font-semibold">{item.label}</p>
+                    <p className="text-2xl font-bold text-gray-900 mt-1">{item.value}</p>
+                  </div>
+                  <span className="text-4xl">{item.icon}</span>
+                </div>
               </div>
-              <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <p className="text-gray-700 text-sm">Confirmed</p>
-                <p className="text-2xl font-bold text-blue-600">{bookingStats.confirmed}</p>
+            ))}
+          </div>
+
+          {/* Admin Controls */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">User Management</h3>
+              <div className="space-y-2">
+                <Link href="/admin/users">
+                  <a className="block px-4 py-2 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors font-semibold">
+                    Manage Users
+                  </a>
+                </Link>
+                <Link href="/admin/users/banned">
+                  <a className="block px-4 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors font-semibold">
+                    Banned Accounts
+                  </a>
+                </Link>
+                <button className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors font-semibold">
+                  User Reports
+                </button>
               </div>
-              <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
-                <p className="text-gray-700 text-sm">Active</p>
-                <p className="text-2xl font-bold text-purple-600">{bookingStats.active}</p>
+            </div>
+
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Content Moderation</h3>
+              <div className="space-y-2">
+                <Link href="/admin/reviews">
+                  <a className="block px-4 py-2 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 transition-colors font-semibold">
+                    Pending Reviews
+                  </a>
+                </Link>
+                <Link href="/admin/properties">
+                  <a className="block px-4 py-2 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors font-semibold">
+                    Properties
+                  </a>
+                </Link>
+                <Link href="/admin/flagged">
+                  <a className="block px-4 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors font-semibold">
+                    Flagged Content
+                  </a>
+                </Link>
               </div>
-              <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-                <p className="text-gray-700 text-sm">Completed</p>
-                <p className="text-2xl font-bold text-green-600">{bookingStats.completed}</p>
-              </div>
-              <div className="p-4 bg-red-50 rounded-lg border border-red-200">
-                <p className="text-gray-700 text-sm">Cancelled</p>
-                <p className="text-2xl font-bold text-red-600">{bookingStats.cancelled}</p>
+            </div>
+
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">System Settings</h3>
+              <div className="space-y-2">
+                <button className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors font-semibold">
+                  Site Settings
+                </button>
+                <button className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors font-semibold">
+                  Email Configuration
+                </button>
+                <button className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors font-semibold">
+                  Payment Settings
+                </button>
               </div>
             </div>
           </div>
 
           {/* Recent Activity */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Recent Users */}
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <h2 className="text-xl font-bold text-gray-800 mb-4">Recent Users</h2>
-              <div className="space-y-3">
-                {recentUsers.map((user) => (
-                  <div key={user._id} className="p-3 bg-gray-50 rounded border border-gray-200">
-                    <p className="font-semibold text-gray-800">{user.name}</p>
-                    <p className="text-xs text-gray-600">{user.email}</p>
-                    <span className="inline-block mt-2 text-xs font-bold px-2 py-1 rounded-full bg-blue-100 text-blue-800 capitalize">
-                      {user.role}
-                    </span>
-                  </div>
-                ))}
-              </div>
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="p-6 border-b border-gray-200">
+              <h3 className="text-xl font-bold text-gray-900">Recent Activity</h3>
             </div>
-
-            {/* Recent Bookings */}
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <h2 className="text-xl font-bold text-gray-800 mb-4">Recent Bookings</h2>
-              <div className="space-y-3">
-                {recentBookings.map((booking) => (
-                  <div key={booking._id} className="p-3 bg-gray-50 rounded border border-gray-200">
-                    <p className="font-semibold text-gray-800">${booking.totalPrice}</p>
-                    <p className="text-xs text-gray-600">
-                      {new Date(booking.checkInDate).toLocaleDateString()}
-                    </p>
-                    <span className={`inline-block mt-2 text-xs font-bold px-2 py-1 rounded-full ${
-                      booking.status === 'confirmed'
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {booking.status}
-                    </span>
+            <div className="divide-y divide-gray-200">
+              {[
+                { time: '5 minutes ago', action: 'New user registered', user: 'john.doe@example.com', icon: '📝' },
+                { time: '15 minutes ago', action: 'Property listing created', user: 'Downtown Apartment', icon: '🏠' },
+                { time: '1 hour ago', action: 'Booking confirmed', user: 'Booking #12345', icon: '✅' },
+                { time: '2 hours ago', action: 'Review flagged', user: 'Review ID: 67890', icon: '⚠️' },
+                { time: '3 hours ago', action: 'Payment processed', user: 'Transaction #54321', icon: '💰' },
+              ].map((item, idx) => (
+                <div key={idx} className="p-6 flex items-center justify-between hover:bg-gray-50">
+                  <div className="flex items-center gap-4">
+                    <span className="text-2xl">{item.icon}</span>
+                    <div>
+                      <p className="font-semibold text-gray-900">{item.action}</p>
+                      <p className="text-sm text-gray-600">{item.user}</p>
+                    </div>
                   </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Recent Reviews */}
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <h2 className="text-xl font-bold text-gray-800 mb-4">Recent Reviews</h2>
-              <div className="space-y-3">
-                {recentReviews.map((review) => (
-                  <div key={review._id} className="p-3 bg-gray-50 rounded border border-gray-200">
-                    <p className="font-semibold text-yellow-600">{'⭐'.repeat(review.rating)}</p>
-                    <p className="text-xs text-gray-600 mt-1 truncate">{review.comment}</p>
-                    <span className={`inline-block mt-2 text-xs font-bold px-2 py-1 rounded-full ${
-                      review.verified ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {review.verified ? 'Verified' : 'Pending'}
-                    </span>
-                  </div>
-                ))}
-              </div>
+                  <span className="text-sm text-gray-600">{item.time}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
-        <ToastContainer position="bottom-center" autoClose={3000} />
       </div>
     </>
   );

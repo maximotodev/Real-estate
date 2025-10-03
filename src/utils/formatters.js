@@ -1,10 +1,23 @@
+/**
+ * Format a number as currency
+ * @param {number} amount - The amount to format
+ * @param {string} currency - ISO currency code (default: 'USD')
+ * @returns {string} Formatted currency string
+ */
 export const formatCurrency = (amount, currency = 'USD') => {
+  if (typeof amount !== 'number' || isNaN(amount)) return '$0.00';
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency,
   }).format(amount);
 };
 
+/**
+ * Format a date string or Date object
+ * @param {string|Date} date - The date to format
+ * @param {string} format - Format type: 'short', 'long', or 'time'
+ * @returns {string} Formatted date string
+ */
 export const formatDate = (date, format = 'short') => {
   const d = new Date(date);
   if (format === 'short') return d.toLocaleDateString('en-US');

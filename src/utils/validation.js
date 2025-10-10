@@ -1,19 +1,36 @@
+/**
+ * Validate email format (RFC 5322 simplified)
+ * @param {string} email - Email address to validate
+ * @returns {boolean} True if valid email format
+ */
 export const validateEmail = (email) => {
+  if (!email || typeof email !== 'string') return false;
   const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return regex.test(email);
+  return regex.test(email.trim().toLowerCase());
 };
 
+/**
+ * Validate password complexity
+ * @param {string} password - Password to validate
+ * @returns {boolean} True if meets security requirements
+ */
 export const validatePassword = (password) => {
   if (!password || typeof password !== 'string') return false;
   const len = password.length;
+  if (len < 8 || len > 128) return false;
   const hasUpperCase = /[A-Z]/.test(password);
   const hasLowerCase = /[a-z]/.test(password);
   const hasNumber = /\d/.test(password);
-
-  return len >= 8 && len <= 128 && hasUpperCase && hasLowerCase && hasNumber;
+  return hasUpperCase && hasLowerCase && hasNumber;
 };
 
+/**
+ * Validate phone number format
+ * @param {string} phone - Phone number to validate
+ * @returns {boolean} True if valid phone format
+ */
 export const validatePhoneNumber = (phone) => {
+  if (!phone || typeof phone !== 'string') return false;
   const cleaned = phone.replace(/\D/g, '');
   return cleaned.length >= 10 && cleaned.length <= 15;
 };

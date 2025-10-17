@@ -27,8 +27,8 @@ const Badge = ({
   }[size] || 'px-3 py-1.5 text-sm gap-2';
 
   return (
-    <span className={`${baseClass} ${variantClass} ${sizeClass}`}>
-      {icon && <span className="text-lg leading-none">{icon}</span>}
+    <span className={`${baseClass} ${variantClass} ${sizeClass}`} role="status">
+      {icon && <span className="text-lg leading-none" aria-hidden="true">{icon}</span>}
       <span>{label}</span>
       {dismissible && (
         <button

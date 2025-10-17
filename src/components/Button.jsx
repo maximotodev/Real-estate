@@ -56,6 +56,8 @@ const Button = ({
       disabled={disabled || loading}
       onClick={onClick}
       className={buttonClass}
+      aria-busy={loading}
+      aria-disabled={disabled || loading}
       {...props}
     >
       {loading ? (

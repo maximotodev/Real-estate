@@ -12,6 +12,14 @@ const ContactForm = ({ hostId, propertyId, onSuccess }) => {
     },
     async (values) => {
       try {
+        // Sanitize inputs to prevent XSS
+        const sanitized = {
+          name: values.name.trim(),
+          email: values.email.trim().toLowerCase(),
+          phone: values.phone.trim(),
+          subject: values.subject.trim(),
+          message: values.message.trim(),
+        };
         const response = await fetch('/api/messages', {
           method: 'POST',
           headers: {
@@ -19,7 +27,7 @@ const ContactForm = ({ hostId, propertyId, onSuccess }) => {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
           body: JSON.stringify({
-            ...values,
+            ...sanitized,
             hostId,
             propertyId,
           }),

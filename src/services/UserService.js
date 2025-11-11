@@ -1,6 +1,15 @@
 import bcrypt from 'bcryptjs';
 
+/**
+ * Service for user authentication and validation
+ * Handles password hashing, validation, and profile formatting
+ */
 export class UserService {
+  /**
+   * Hash password using bcryptjs (12 rounds = production-grade security)
+   * @param {string} password - Plain text password
+   * @returns {Promise<string>} Hashed password
+   */
   static async hashPassword(password) {
     const salt = await bcrypt.genSalt(12);
     return bcrypt.hash(password, salt);

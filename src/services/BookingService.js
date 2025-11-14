@@ -1,4 +1,14 @@
+/**
+ * Service for booking calculations and validation
+ * Handles price calculation with fees/tax, refund policies, and date validation
+ */
 export class BookingService {
+  /**
+   * Calculate number of nights between two dates
+   * @param {string|Date} checkIn - Check-in date
+   * @param {string|Date} checkOut - Check-out date
+   * @returns {number} Number of nights
+   */
   static calculateNights(checkIn, checkOut) {
     const start = new Date(checkIn);
     const end = new Date(checkOut);

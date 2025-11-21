@@ -1,6 +1,15 @@
 const VALID_PROPERTY_TYPES = ['apartment', 'house', 'condo', 'studio', 'townhouse', 'villa', 'cottage', 'office', 'warehouse'];
 
+/**
+ * Service for property search, filtering, and analytics
+ * Builds MongoDB queries, validates property data, and calculates metrics
+ */
 export class PropertyService {
+  /**
+   * Build MongoDB search query from filter criteria
+   * @param {object} filters - Filter object (search, city, price, type, amenities, etc)
+   * @returns {object} MongoDB query object
+   */
   static buildSearchQuery(filters) {
     const query = {};
 
